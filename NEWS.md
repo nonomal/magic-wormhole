@@ -3,6 +3,7 @@ User-visible changes in "magic-wormhole":
 ## Upcoming Release
 
 * add release-notes here when making PRs
+* Incorporate attrs' zope-interface support (#492)
 
 
 ## Release 0.14.0 (28-Mar-2024)
@@ -624,7 +625,7 @@ import wormhole must be updated.
 ## Release 0.3.0 (24-Jun-2015)
 
 Add preliminary Twisted support, only for symmetric endpoints (no
-initator/receiver distinction). Lacks code-entry tab-completion. May still
+initiator/receiver distinction). Lacks code-entry tab-completion. May still
 leave timers lingering. Add test suite (only for Twisted, so far).
 
 Use a sqlite database for Relay server state, to survive reboots with less
