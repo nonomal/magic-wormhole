@@ -1,12 +1,11 @@
-from __future__ import print_function, unicode_literals
 from collections import deque
 from attr import attrs, attrib
-from attr.validators import provides
 from zope.interface import implementer
 from twisted.internet.interfaces import IPushProducer, IPullProducer
 from twisted.python import log
 from twisted.python.reflect import safe_str
 from .._interfaces import IDilationManager, IOutbound
+from ..util import provides
 from .connection import KCM, Ping, Pong, Ack
 
 
@@ -151,11 +150,11 @@ from .connection import KCM, Ping, Pong, Ack
 #   in self._subchannels_with_producers)'. Pros: fewer subchannel->producer
 #   mappings lying around to disagree with one another. Cons: exposes a bit
 #   too much of the Subchannel internals
-
+#
 
 @attrs
 @implementer(IOutbound, IPushProducer)
-class Outbound(object):
+class Outbound:
     # Manage outbound data: subchannel writes to us, we write to transport
     _manager = attrib(validator=provides(IDilationManager))
     _cooperator = attrib()
@@ -275,7 +274,7 @@ class Outbound(object):
         self._queued_unsent.clear()
         self.pauseProducing()
         # TODO: I expect this will call pauseProducing twice: the first time
-        # when we get stopProducing (since we're registere with the
+        # when we get stopProducing (since we're registered with the
         # underlying connection as the producer), and again when the manager
         # notices the connectionLost and calls our _stop_using_connection
 
@@ -341,7 +340,7 @@ class Outbound(object):
 # configurable Cooperator, a pause-immediately argument to startStreaming()
 @implementer(IPushProducer)
 @attrs(eq=False)
-class PullToPush(object):
+class PullToPush:
     _producer = attrib(validator=provides(IPullProducer))
     _unregister = attrib(validator=lambda _a, _b, v: callable(v))
     _cooperator = attrib()

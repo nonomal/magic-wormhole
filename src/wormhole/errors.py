@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-
-
 class WormholeError(Exception):
     """Parent class for all wormhole-related errors"""
 
@@ -46,6 +43,8 @@ class LonelyError(WormholeError):
     """wormhole.close() was called before the peer connection could be
     established"""
 
+class CrowdedError(WormholeError):
+    """We received messages from multiple peers, there can be only one."""
 
 class WrongPasswordError(WormholeError):
     """

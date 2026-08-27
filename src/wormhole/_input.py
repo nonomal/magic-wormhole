@@ -1,18 +1,16 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 # We use 'threading' defensively here, to detect if we're being called from a
 # non-main thread. _rlcompleter.py is the only internal Wormhole code that
 # deliberately creates a new thread.
 import threading
 
 from attr import attrib, attrs
-from attr.validators import provides
 from automat import MethodicalMachine
 from twisted.internet import defer
 from zope.interface import implementer
 
 from . import _interfaces, errors
 from ._nameplate import validate_nameplate
+from .util import provides
 
 
 def first(outputs):
@@ -21,7 +19,7 @@ def first(outputs):
 
 @attrs
 @implementer(_interfaces.IInput)
-class Input(object):
+class Input:
     _timing = attrib(validator=provides(_interfaces.ITiming))
     m = MethodicalMachine()
     set_trace = getattr(m, "_setTrace",
@@ -305,7 +303,7 @@ class Input(object):
 # we only expose the Helper to application code, not _Input
 @attrs
 @implementer(_interfaces.IInputHelper)
-class Helper(object):
+class Helper:
     _input = attrib()
 
     def __attrs_post_init__(self):

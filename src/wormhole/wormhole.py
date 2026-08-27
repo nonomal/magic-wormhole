@@ -1,10 +1,8 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 import os
 import sys
 
 from attr import attrib, attrs
-from twisted.python import failure
+from twisted.python import failure, log
 from twisted.internet.task import Cooperator
 from zope.interface import implementer
 
@@ -48,7 +46,7 @@ del get_versions
 
 @attrs
 @implementer(IWormhole)
-class _DelegatedWormhole(object):
+class _DelegatedWormhole:
     _delegate = attrib()
 
     def __attrs_post_init__(self):
@@ -84,7 +82,7 @@ class _DelegatedWormhole(object):
         cannot be called until when_verifier() has fired, nor after close()
         was called.
         """
-        if not isinstance(purpose, type("")):
+        if not isinstance(purpose, str):
             raise TypeError(type(purpose))
         if not self._key:
             raise NoKeyError()
@@ -106,8 +104,7 @@ class _DelegatedWormhole(object):
     def got_code(self, code):
         self._delegate.wormhole_got_code(code)
 
-    def got_key(self, key):
-        self._delegate.wormhole_got_unverified_key(key)
+    def got_key(self, key): # unverified
         self._key = key  # for derive_key()
 
     def got_verifier(self, verifier):
@@ -124,13 +121,12 @@ class _DelegatedWormhole(object):
 
 
 @implementer(IWormhole, IDeferredWormhole)
-class _DeferredWormhole(object):
+class _DeferredWormhole:
     def __init__(self, reactor, eq, _enable_dilate=False):
         self._reactor = reactor
         self._welcome_observer = OneShotObserver(eq)
         self._code_observer = OneShotObserver(eq)
         self._key = None
-        self._key_observer = OneShotObserver(eq)
         self._verifier_observer = OneShotObserver(eq)
         self._version_observer = OneShotObserver(eq)
         self._received_observer = SequenceObserver(eq)
@@ -153,9 +149,6 @@ class _DeferredWormhole(object):
 
     def get_welcome(self):
         return self._welcome_observer.when_fired()
-
-    def get_unverified_key(self):
-        return self._key_observer.when_fired()
 
     def get_verifier(self):
         return self._verifier_observer.when_fired()
@@ -187,16 +180,27 @@ class _DeferredWormhole(object):
         cannot be called until when_verified() has fired, nor after close()
         was called.
         """
-        if not isinstance(purpose, type("")):
+        if not isinstance(purpose, str):
             raise TypeError(type(purpose))
         if not self._key:
             raise NoKeyError()
         return derive_key(self._key, to_bytes(purpose), length)
 
-    def dilate(self, transit_relay_location=None, no_listen=False):
+    # todo: note that only DeferredWormhole has this .. the
+    # DelegatedWormhole thus has no way to dilate?
+
+    # todo: transit_relay_locations (plural) probably, and ability to
+    # pass a list? (there's a TODO about this is connector.py too)
+    def dilate(self, transit_relay_location=None, no_listen=False, on_status_update=None, ping_interval=None, expected_subprotocols=None):
+        """
+        :returns DilatedWormhole: an instance for accessing dilation
+            functionality. This includes creating endpoints that open
+            new subchannels (i.e. the OPEN goes from us to the other
+            peer).
+        """
         if not self._enable_dilate:
             raise NotImplementedError
-        return self._boss.dilate(transit_relay_location, no_listen)  # fires with (endpoints)
+        return self._boss.dilate(transit_relay_location, no_listen, on_status_update, ping_interval, expected_subprotocols)
 
     def close(self):
         # fails with WormholeError unless we established a connection
@@ -220,9 +224,8 @@ class _DeferredWormhole(object):
     def got_code(self, code):
         self._code_observer.fire_if_not_fired(code)
 
-    def got_key(self, key):
+    def got_key(self, key): # unverified
         self._key = key  # for derive_key()
-        self._key_observer.fire_if_not_fired(key)
 
     def got_verifier(self, verifier):
         self._verifier_observer.fire_if_not_fired(verifier)
@@ -248,7 +251,6 @@ class _DeferredWormhole(object):
             self._closed_observer.fire_if_not_fired(result)
         self._welcome_observer.error(f)
         self._code_observer.error(f)
-        self._key_observer.error(f)
         self._verifier_observer.error(f)
         self._version_observer.error(f)
         self._received_observer.fire(f)
@@ -264,31 +266,36 @@ def create(
         tor=None,
         timing=None,
         stderr=sys.stderr,
+        dilation=None,
         _eventual_queue=None,
-        _enable_dilate=False):
+        on_status_update=None):
     timing = timing or DebugTiming()
     side = bytes_to_hexstr(os.urandom(5))
     journal = journal or ImmediateJournal()
     eq = _eventual_queue or EventualQueue(reactor)
     cooperator = Cooperator(scheduler=eq.eventually)
+
     if delegate:
+        if hasattr(delegate, "wormhole_got_unverified_key"):
+            log.err(DeprecationWarning("WARNING: wormhole_got_unverified_key has been removed, see #732"))
         w = _DelegatedWormhole(delegate)
     else:
-        w = _DeferredWormhole(reactor, eq, _enable_dilate=_enable_dilate)
+        w = _DeferredWormhole(reactor, eq, _enable_dilate=bool(dilation))
     # this indicates Wormhole capabilities
     wormhole_versions = {
         "can-dilate": DILATION_VERSIONS,
         "dilation-abilities": Connector.get_connection_abilities(),
     }
-    if not _enable_dilate:
-        wormhole_versions = {}  # don't advertise Dilation yet: not ready
+
+    if not dilation:
+        wormhole_versions = {}
     wormhole_versions["app_versions"] = versions  # app-specific capabilities
     v = __version__
-    if isinstance(v, type(b"")):
+    if isinstance(v, bytes):
         v = v.decode("utf-8", errors="replace")
     client_version = ("python", v)
     b = Boss(w, side, relay_url, appid, wormhole_versions, client_version,
-             reactor, eq, cooperator, journal, tor, timing)
+             reactor, eq, cooperator, journal, tor, timing, on_status_update)
     w._set_boss(b)
     b.start()
     return w

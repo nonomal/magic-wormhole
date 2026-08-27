@@ -2,7 +2,125 @@ User-visible changes in "magic-wormhole":
 
 ## Upcoming Release
 
-* add release-notes here when making PRs
+* (add release-notes here when making PRs)
+* **INCOMPATIBLE**: the method ``get_unverified_key()`` has been removed from the object returned by ``wormhole.create()``.
+  In addition, `wormhole_got_unverified_key()` of the Delegate object is no longer called.
+  Applications should use ``derive_key()`` to derive purpose-specific subkeys, after the wormhole is established.
+  A valid use of this method was to learn when we get the final key, which can now be accomplished using "status" API (via `on_status_update=` kwarg to ``wormhole.create()``.
+
+
+## Release 0.24.0 (5-May-2026)
+* **SECURITY**: @marduc812 noticed that there is also a missing "basename()" when a receiving user specifies an output directory (via "--output") that already exists. Users on past releases can mitigate this bug by ensuring that any specified "--output" filename is not an already-existing directory. CVE-2026-42448
+
+
+## Release 0.23.0 (10-Mar-2026)
+* **SECURITY**: Ian McKenzie @ikmckenz noticed a regression that deleted "basename()" usage, exposing receivers to path-name traversal attacks. Ian provided a patch and unit-test. Versions 0.21 and 0.22 are affected. This has been fixed and released (thanks, Ian!), users should upgrade.
+* Nicer user guidance on "crowded" errors (#708 by @mvanhorn)
+
+
+## Release 0.22.0 (30-Dec-2025)
+
+* Errback pending receive_record() calls on connection loss (#686 @bramhaag)
+* Display / suppress QR code with ``WORMHOLE_QR=0`` (@meejah)
+* Document the CLI more completely (#609 @meejah)
+* Update Ecosystem documents (@leoheitmannruiz @ClaytonWas)
+* Fix spelling (@tinyfoolish)
+* Exclude Autobahn 25.11.1 and 25.12.1 (@meejah)
+
+
+## Release 0.21.1 (30-Oct-2025)
+
+* Exclude autobahn 25.10.2 due to Windows breakage (#680 @jan-Sanku @meejah)
+
+
+## Release 0.21.0 (23-Oct-2025)
+
+* Produce errors for unwanted incoming subprotocols when user code asks (#660 @meejah, @shapr)
+* Correct types in Dilation subprotocols (#665 @mjoerg)
+* Support Bash < 4.0 completions for MacOS (#524 @meejah @niu541412)
+* Do not overwrite local directory specified with --output-file (#667 @dslemusp @meejah)
+* Reject autobahn 24.9.1 and 25.10.1 (#676 @meejah)
+
+
+## Release 0.20.0 (30-Jul-2025)
+
+* Update minimal Python version in README.md (#634 @sblondon)
+* Remove 'u' prefix to strings (#636 @sblondon)
+* Use classes directly instead of type() calls (#637 @sblondon)
+* Doc: remove details about python2 types (#638 @sblondon)
+* Add 'hints' information to Dilation status updates (@meejah)
+* Replace formatted strings to f-strings (#642 @sblondon)
+* Properly display QR codes on dark-mode displays (#651 @kisst)
+* INCOMPAT: the Dilation extension now enables composition of
+  subchannels, giving each a named subprotocol along with a new API to
+  support it (also removes the generic "control" subchannel) (@meejah @shapr)
+* Improve ping-timeouts on Mailbox connection (#646 @meejah)
+* Update old syntax (#658 @sblondon)
+* Fix bare pytest (#656 @Hugo-C)
+* Add magic-wormhole CLI command (#640 @nils-werner)
+
+
+## Release 0.19.2 (30-May-2025)
+
+* Properly update all meta-data + docs regarding 3.9 drop (#592, @hmaarrfk)
+* Un-pin "magic-wormhole-mailbox-server" and "magic-wormhole-transit-relay"
+  in the "dev" extra (#630, @mgorny)
+
+
+## Release 0.19.1 (29-May-2025)
+
+* Run tests from sdist release
+* Report correct version in test Wormhole server (#625, @mgorny)
+
+
+## Release 0.19.0 (28-May-2025)
+
+* Add a "status" feedback API for Dilation (#591, @meejah)
+* use new Status API to notify a sending user when a code is consumed (#575, @shapr + @meejah)
+* add support for Ping/Pong timeouts in Dilation, improving re-connection speed (#590 @meejah)
+* documentation improvements (#614, #615 @shapr + @meejah)
+* improve Dilation version negotiation (#606, #611 @shapr + @meejah)
+* convert test-suite to pytest (#603, #610 @shapr + @meejah)
+* resize progress bar properly (#622 @shapr)
+* Drop support for Python 3.9, upgrade github-actions (#596 @meejah)
+* add a contribution guide (#597 @meejah)
+* INCOMPAT: "sdist" files move to an underscore, so the source-package name is
+  now "magic_wormhole-0.19.0.tar.gz" (the wheel files always had an underscore).
+  This is because setuptools v69.3.0 in 2024 implemented PEP 625 from 2020.
+
+
+## Release 0.18.0 (11-Mar-2025)
+
+* Improve the example to act more like send/receive (#558, @OndrewBot)
+* Display a QR code by default for "wormhole send" (#555, @ferada + @meejah)
+  This encodes "wormhole-transfer:M-word0-word1" per the spec:
+  https://github.com/magic-wormhole/magic-wormhole-protocols/blob/main/uri-scheme.md
+* Add sequence diagram
+* Support Read the Docs pull-request builds
+* Drop support for Python 3.8 (#556)
+* Add broken-link checker (#588, https://github.com/Cycloctane)
+* Preemptively fix Click 8.2 (#584, @cjwatson)
+* Basic support for PEP518 (#579, @SnoopJ)
+* Add WORMHOLE_ACCEPT_FILE (#570, @haatveit)
+
+
+## Release 0.17.0 (23-Oct-2024)
+
+* Bump magic-wormhole-transit-relay to 0.3.1 for testing, and fix (#543)
+* Fix test regression under Twisted 24.10.0 (#553)
+
+## Release 0.16.0 (3-Oct-2024)
+
+* Updated to python-spake2 version 0.9
+* Removed more Python2-isms
+
+
+## Release 0.15.0 (7-Aug-2024)
+
+* Incorporate attrs' zope-interface support (#492, #527, from https://github.com/meejah)
+* Add "codespell" to correct spelling (#526, from https://github.com/yarikoptic)
+* Fix bash completions (#525, from https://github.com/RobertoD91)
+* run tests properly when Noise is not installed (#522, from https://github.com/anarcat)
 
 
 ## Release 0.14.0 (28-Mar-2024)
@@ -388,8 +506,8 @@ Github.
   suitably-permissioned remote `~/.ssh/authorized_keys` file. These commands
   are experimental: the syntax might be changed in the future, or they might
   be removed altogether.
-* CLI: "wormhole recv" and "wormhole recieve" are now accepted as aliases for
-  "wormhole receive", to help bad spelers :)
+* CLI: "wormhole recv" and "wormhole recieve"[sic] are now accepted as aliases
+  for "wormhole receive", to help bad spelers :)
 * CLI: improve display of abbreviated file sizes
 * CLI: don't print traceback upon "normal" errors
 * CLI: when target file already exists, don't reveal that fact to the sender,
@@ -624,7 +742,7 @@ import wormhole must be updated.
 ## Release 0.3.0 (24-Jun-2015)
 
 Add preliminary Twisted support, only for symmetric endpoints (no
-initator/receiver distinction). Lacks code-entry tab-completion. May still
+initiator/receiver distinction). Lacks code-entry tab-completion. May still
 leave timers lingering. Add test suite (only for Twisted, so far).
 
 Use a sqlite database for Relay server state, to survive reboots with less

@@ -110,7 +110,7 @@ generally baked-in to the application source code or default config.
 This library includes the URL of a public mailbox server run by the
 author. Application developers can use this one, or they can run their
 own (see the
-`warner/magic-wormhole-mailbox-server <https://github.com/warner/magic-wormhole-mailbox-server>`__
+`magic-wormhole/magic-wormhole-mailbox-server <https://github.com/magic-wormhole/magic-wormhole-mailbox-server>`__
 repository) and configure their clients to use it instead. The URL of
 the public mailbox server is passed as a unicode string. Note that
 because the server actually speaks WebSockets, the URL starts with
@@ -131,8 +131,8 @@ several optional arguments:
 -  ``delegate``: provide a Delegate object to enable “delegated mode”,
    or pass None (the default) to get “deferred mode”
 -  ``journal``: provide a Journal object to enable journaled mode. See
-   journal.md for details. Note that journals only work with delegated
-   mode, not with deferred mode.
+   :doc:`the journal docs <journal>` for details. Note that journals
+   only work with delegated mode, not with deferred mode.
 -  ``tor_manager``: to enable Tor support, create a
    ``wormhole.TorManager`` instance and pass it here. This will hide the
    client’s IP address by proxying all connections (mailbox and transit)
@@ -151,6 +151,10 @@ several optional arguments:
    that will be made available to the peer via the ``got_version``
    event. This data is delivered before any data messages, and can be
    used to indicate peer capabilities.
+- ``on_status_update``: this single-argument callable will receive
+   instances of ``wormhole.WormholeStatus`` as the status of our
+   wormhole changes; useful to show your users
+
 
 Code Management
 ---------------
@@ -436,16 +440,6 @@ Most applications will only use ``code``, ``received``, and ``close``.
    after ``w.set_code(code)`` is called. This is most useful after
    calling ``w.allocate_code()``, to show the generated code to the user
    so they can transcribe it to their peer.
--  key (``yield w.get_unverified_key()`` /
-   ``dg.wormhole_got_unverified_key(key)``): fired (with the raw master
-   SPAKE2 key) when the key-exchange process has completed and a
-   purported shared key is established. At this point we do not know
-   that anyone else actually shares this key: the peer may have used the
-   wrong code, or may have disappeared altogether. To wait for proof
-   that the key is shared, wait for ``get_verifier`` instead. This event
-   is really only useful for detecting that the initiating peer has
-   disconnected after leaving the initial PAKE message, to display a
-   pacifying message to the user.
 -  verifier (``verifier = yield w.get_verifier()`` /
    ``dg.wormhole_got_verifier(verifier)``: fired when the key-exchange
    process has completed and a valid VERSION message has arrived. The
@@ -505,15 +499,15 @@ clients to ask for greater capacity when they connect (probably by
 passing additional “mailbox attribute” parameters with the
 ``allocate``/``claim``/``open`` messages).
 
-For bulk data transfer, see “transit.md”, or the “Dilation” section
-below.
+For bulk data transfer, see :doc:`the transit docs <transit>` ,
+or the “Dilation” section below.
 
 Closing
 -------
 
 When the application is done with the wormhole, it should call
 ``w.close()``, and wait for a ``closed`` event. This ensures that all
-server-side resources are released (allowing the nameplate to be re-used
+server-side resources are released (allowing the nameplate to be reused
 by some other client), and all network sockets are shut down.
 
 In Deferred mode, this just means waiting for the Deferred returned by
@@ -561,7 +555,7 @@ point at functions, which cannot be serialized easily). It also only
 works for “non-dilated” wormholes (see below).
 
 To ensure correct behavior, serialization should probably only be done
-in “journaled mode”. See journal.md for details.
+in “journaled mode”. See :doc:`the journal docs <journal>` for details.
 
 If you use serialization, be careful to never use the same partial
 wormhole object twice.
@@ -581,6 +575,11 @@ server-imposed number/size/rate limits apply. Calling ``w.dilate()``
 initiates the dilation process, and eventually yields a set of
 Endpoints. Once dilated these endpoints can be used to establish
 multiple (encrypted) “subchannel” connections to the other side.
+
+You may pass an ``on_status_update`` callable to ``dilate()``, which
+is a function that will be called with ``wormhole.DilationStatus``
+instances whenever the status of the Dilation connection (or the
+associated mailbox connection) changes.
 
 Each subchannel behaves like a regular Twisted ``ITransport``, so they
 can be glued to the Protocol instance of your choice. They also
@@ -714,15 +713,14 @@ subchannel.
 Bytes, Strings, Unicode, and Python 3
 -------------------------------------
 
-All cryptographically-sensitive parameters are passed as bytes (“str” in
-python2, “bytes” in python3):
+All cryptographically-sensitive parameters are passed as bytes (“bytes” in
+python3):
 
 -  verifier string
 -  data in/out
 -  transit records in/out
 
-Other (human-facing) values are always unicode (“unicode” in python2,
-“str” in python3):
+Other (human-facing) values are always unicode (“str” in python3):
 
 -  wormhole code
 -  relay URL
@@ -748,9 +746,6 @@ Full API list
 +----------------------+----------------------+----------------------+
 | .                    | d=w.get_code()       | dg.wor               |
 |                      |                      | mhole_got_code(code) |
-+----------------------+----------------------+----------------------+
-| .                    | d=w.                 | dg.wormhole_got      |
-|                      | get_unverified_key() | _unverified_key(key) |
 +----------------------+----------------------+----------------------+
 | .                    | d=w.get_verifier()   | dg.wormhole_go       |
 |                      |                      | t_verifier(verifier) |

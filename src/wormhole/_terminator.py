@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 from automat import MethodicalMachine
 from zope.interface import implementer
 
@@ -7,7 +5,7 @@ from . import _interfaces
 
 
 @implementer(_interfaces.ITerminator)
-class Terminator(object):
+class Terminator:
     m = MethodicalMachine()
     set_trace = getattr(m, "_setTrace",
                         lambda self, f: None)  # pragma: no cover

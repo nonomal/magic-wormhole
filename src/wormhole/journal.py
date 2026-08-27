@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 import contextlib
 
 from zope.interface import implementer
@@ -8,7 +6,7 @@ from ._interfaces import IJournal
 
 
 @implementer(IJournal)
-class Journal(object):
+class Journal:
     def __init__(self, save_checkpoint):
         self._save_checkpoint = save_checkpoint
         self._outbound_queue = []
@@ -32,7 +30,7 @@ class Journal(object):
 
 
 @implementer(IJournal)
-class ImmediateJournal(object):
+class ImmediateJournal:
     def __init__(self):
         pass
 

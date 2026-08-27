@@ -1,16 +1,15 @@
-from __future__ import print_function, absolute_import, unicode_literals
 from zope.interface import implementer
 from attr import attrs, attrib
-from attr.validators import provides
 from automat import MethodicalMachine
 from . import _interfaces
 from ._nameplate import validate_nameplate
 from .errors import KeyFormatError
+from .util import provides
 
 
 def validate_code(code):
     if ' ' in code:
-        raise KeyFormatError("Code '%s' contains spaces." % code)
+        raise KeyFormatError(f"Code '{code}' contains spaces.")
     nameplate = code.split("-", 2)[0]
     validate_nameplate(nameplate)  # can raise KeyFormatError
 
@@ -21,7 +20,7 @@ def first(outputs):
 
 @attrs
 @implementer(_interfaces.ICode)
-class Code(object):
+class Code:
     _timing = attrib(validator=provides(_interfaces.ITiming))
     m = MethodicalMachine()
     set_trace = getattr(m, "_setTrace",

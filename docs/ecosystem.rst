@@ -4,7 +4,7 @@ The Magic-Wormhole Ecosystem
 This page attempts to summarize the current state of various codebases that implement or extend the Magic Wormhole protocols.
 If you feel something is missing, please open an Issue or (better yet) a Pull Request at https://github.com/magic-wormhole/magic-wormhole
 
-This document represents our best knowledge as of September, 2023.
+This document represents our best knowledge as of April, 2025.
 
 
 Documentation
@@ -116,12 +116,12 @@ End User / Client Applications
 ------------------------------
 
 Based on the above libraries, there are several end-user applications targeting different platforms.
-Unless otherwise noted, these "inherit" any limitations of their langauge's library implementation from the above table.
+Unless otherwise noted, these "inherit" any limitations of their language's library implementation from the above table.
 
 Library and CLI
 ~~~~~~~~~~~~~~~
 
-* `magic-wormhole <https://github.com/magic-wormhole/magic-wormhole>`_ the Python reference implementation and CLI (the command-line progam is called ``wormhole`` in most distributions)
+* `magic-wormhole <https://github.com/magic-wormhole/magic-wormhole>`_ the Python reference implementation and CLI (the command-line program is called ``wormhole`` in most distributions)
 * `wormhole-william <https://github.com/psanford/wormhole-william>`_ is a Go library and CLI for file-transfer
 * `magic-wormhole.rs <https://github.com/magic-wormhole/magic-wormhole.rs/>`_ provides a library and CLI for file-transfer
 * `haskell-magic-wormhole <https://github.com/LeastAuthority/haskell-magic-wormhole>`_ and `wormhole-client <https://github.com/LeastAuthority/wormhole-client>`_ are a library and CLI for file-transfer in Haskell
@@ -132,12 +132,25 @@ GUIs for Desktop, Mobile, Web
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * `Warp <https://apps.gnome.org/Warp/>`_ is a GNOME GUI written in Rust
-* `Winden <https://winden.app/>`_ is a Web client and deployment (using the Go implemtation via WASM)
+* `Winden <https://winden.app/>`_ is a Web client and deployment (using the Go implementation via WASM)
 * `Destiny <https://f-droid.org/packages/com.leastauthority.destiny/>`_ is an Android (and iOS) app using Flutter (with the Go implementation for wormhole). Also on proprietary app stores.
-* `Wormhole <https://gitlab.com/lukas-heiligenbrunner/wormhole>`_ for Android. Based on the Rust implementation.
+* `Wormhole <https://github.com/wormhole-app/wormhole>`_ for Android, iOS, macOS, Linux and Windows. Based on the Rust implementation.
 * `Mobile Wormhole <https://github.com/pavelsof/mobile-wormhole>`_ for Android (also `on f-droid <https://github.com/pavelsof/mobile-wormhole>`_. Based on the Python implementation, using Kivy
 * `Wormhole William Mobile <https://github.com/psanford/wormhole-william-mobile>`_ for Android and iOS.
+* `iyox-Wormhole <https://github.com/iyox-studios/iyox-Wormhole/>`_ is an Android app with Material You design. Based on the Rust implementation of magic-wormhole
 * `Rymdport <https://github.com/Jacalz/rymdport>`_ is a cross-platform graphical desktop application based on wormhole-william.
+* `Wyrmhole <https://github.com/ClaytonWas/wyrmhole>`_, is a cross-platform GUI using Tauri designed for managing many bulk file transfers simultaneously based on the Rust implementation.
+* `wormhole.page <https://wormhole.page>`_ is a Web client (using wormhole-rs via WASM)
+
+
+Non-File-Transfer Uses
+~~~~~~~~~~~~~~~~~~~~~~
+
+We can use Wormhole (especially with Dilation) for all kinds of peer protocols.
+
+* `git-withme <https://sr.ht/~meejah/git-withme>`_: use Git directly between two peers, no GitLab or similar host required;
+* `Pear On <https://sr.ht/~meejah/pear-on/>`_: share a terminal with one or more peers (``tty-share`` without a central server);
+* Port-forwarding: over the classic Transit protocol in the `rust implementation <https://github.com/magic-wormhole/magic-wormhole.rs/blob/e6ddc75c63ba030d5681cac04ca3e5a2262acc50/src/forwarding.rs#L1>`_ and over the Dilation protocol in Python as `fowl <https://github.com/meejah/fowl>`_ (forward-over-wormhole, locally).
 
 
 Integrations
@@ -149,13 +162,11 @@ These use the basic file-transfer functionality of the protocol, but build it in
 * `termshark <https://github.com/gcla/termshark/>`_ integrates ``wormhole-william`` (the Go implementation) to facilitate transfer of ``.pcap`` files (see the `termshark User Guide <https://github.com/gcla/termshark/blob/master/docs/UserGuide.md#transfer-a-pcap-file>`_
 
 
-Other Uses
-~~~~~~~~~~
+Mailbox-Only Uses
+~~~~~~~~~~~~~~~~~
 
-Some other interesting uses of Magic Wormhole that don't directly use the file-transfer protocol.
-If you know of others, please send them along!
-
-* Port-forwarding: over the classic Transit protocol in the `rust implementation <https://github.com/magic-wormhole/magic-wormhole.rs/blob/e6ddc75c63ba030d5681cac04ca3e5a2262acc50/src/forwarding.rs#L1>`_ and over the Dilation protocol in Python as `fow <https://github.com/meejah/fow>`_ (foward-over-wormhole).
+It's possible to do interesting things without ever gaining a direct peer connection.
+Here are some we know of:
 
 * Invite / key-exchange: `Magic Folder <https://magic-folder.readthedocs.io/en/latest/invites.html>`_ implements a custom protocol to do "introduction" / key-exchange.
 

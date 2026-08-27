@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 from attr import attrib, attrs
 from attr.validators import instance_of
 from automat import MethodicalMachine
@@ -10,18 +8,20 @@ from . import _interfaces
 
 @attrs
 @implementer(_interfaces.IMailbox)
-class Mailbox(object):
-    _side = attrib(validator=instance_of(type(u"")))
+class Mailbox:
+    _side = attrib(validator=instance_of(str))
     m = MethodicalMachine()
     set_trace = getattr(m, "_setTrace",
                         lambda self, f: None)  # pragma: no cover
 
     def __attrs_post_init__(self):
         self._mailbox = None
+        self._their_side = None # set by first non-ours message
         self._pending_outbound = {}
         self._processed = set()
 
-    def wire(self, nameplate, rendezvous_connector, ordering, terminator):
+    def wire(self, boss, nameplate, rendezvous_connector, ordering, terminator):
+        self._B = _interfaces.IBoss(boss)
         self._N = _interfaces.INameplate(nameplate)
         self._RC = _interfaces.IRendezvousConnector(rendezvous_connector)
         self._O = _interfaces.IOrder(ordering)
@@ -97,13 +97,18 @@ class Mailbox(object):
         pass
 
     def rx_message(self, side, phase, body):
-        assert isinstance(side, type("")), type(side)
-        assert isinstance(phase, type("")), type(phase)
-        assert isinstance(body, type(b"")), type(body)
+        assert isinstance(side, str), type(side)
+        assert isinstance(phase, str), type(phase)
+        assert isinstance(body, bytes), type(body)
         if side == self._side:
             self.rx_message_ours(phase, body)
         else:
-            self.rx_message_theirs(side, phase, body)
+            if self._their_side is None:
+                self._their_side = side
+            if side == self._their_side:
+                self.rx_message_theirs(side, phase, body)
+            else:
+                self._B.crowded()
 
     @m.input()
     def rx_message_ours(self, phase, body):
@@ -133,8 +138,8 @@ class Mailbox(object):
 
     @m.output()
     def queue(self, phase, body):
-        assert isinstance(phase, type("")), type(phase)
-        assert isinstance(body, type(b"")), (type(body), phase, body)
+        assert isinstance(phase, str), type(phase)
+        assert isinstance(body, bytes), (type(body), phase, body)
         self._pending_outbound[phase] = body
 
     @m.output()
@@ -153,8 +158,8 @@ class Mailbox(object):
 
     @m.output()
     def RC_tx_add(self, phase, body):
-        assert isinstance(phase, type("")), type(phase)
-        assert isinstance(body, type(b"")), type(body)
+        assert isinstance(phase, str), type(phase)
+        assert isinstance(body, bytes), type(body)
         self._RC.tx_add(phase, body)
 
     @m.output()

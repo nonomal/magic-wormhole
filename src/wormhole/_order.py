@@ -1,17 +1,16 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 from attr import attrib, attrs
-from attr.validators import instance_of, provides
+from attr.validators import instance_of
 from automat import MethodicalMachine
 from zope.interface import implementer
 
 from . import _interfaces
+from .util import provides
 
 
 @attrs
 @implementer(_interfaces.IOrder)
-class Order(object):
-    _side = attrib(validator=instance_of(type(u"")))
+class Order:
+    _side = attrib(validator=instance_of(str))
     _timing = attrib(validator=provides(_interfaces.ITiming))
     m = MethodicalMachine()
     set_trace = getattr(m, "_setTrace",
@@ -35,9 +34,9 @@ class Order(object):
 
     def got_message(self, side, phase, body):
         # print("ORDER[%s].got_message(%s)" % (self._side, phase))
-        assert isinstance(side, type("")), type(phase)
-        assert isinstance(phase, type("")), type(phase)
-        assert isinstance(body, type(b"")), type(body)
+        assert isinstance(side, str), type(phase)
+        assert isinstance(phase, str), type(phase)
+        assert isinstance(body, bytes), type(body)
         if phase == "pake":
             self.got_pake(side, phase, body)
         else:
@@ -53,9 +52,9 @@ class Order(object):
 
     @m.output()
     def queue(self, side, phase, body):
-        assert isinstance(side, type("")), type(phase)
-        assert isinstance(phase, type("")), type(phase)
-        assert isinstance(body, type(b"")), type(body)
+        assert isinstance(side, str), type(phase)
+        assert isinstance(phase, str), type(phase)
+        assert isinstance(body, bytes), type(body)
         self._queue.append((side, phase, body))
 
     @m.output()

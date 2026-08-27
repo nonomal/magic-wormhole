@@ -29,6 +29,75 @@ class IWormhole(Interface):
         pass
 
 
+class IWormholeDelegate(Interface):
+    """
+    Must be implemented by the object passed as "delegate=" to wormhole.create
+
+    These methods will be called at the appropriate time by the
+    _DelegatedWormhole instance. They will be called from the main
+    thread which is running the reactor. Methods MUST NOT block for
+    "too long"; use deferToThread() or similar mechanisms if blocking
+    code needs to run.
+    """
+
+    def wormhole_got_welcome(welcome: dict) -> None:
+        """
+        We have connected to the server and received its "welcome"
+        message, which is an arbitrary `dict`. It may contain a
+        `"motd"` attribute which -- if present -- is intended to be
+        shown to the user.
+
+        Other attributes may be present.
+        """
+
+    def wormhole_got_code(code: str) -> None:
+        """
+        We have a secret code. This could be because the wormhole was told
+        to allocate one, or because one was set.
+        """
+
+    def wormhole_got_verifier(verifier: bytes) -> None:  # XXX bytes, or str?
+        """
+        A tagged hash of the secret key. If both sides compare their
+        verifier (usually out-of-band) they can be assured that they
+        both have the same secret key and are thus not subject to a
+        MitM
+        """
+
+    def wormhole_got_versions(versions: dict) -> None:
+        """
+        We have received the "versions" message from our peer.
+
+        This confirms that we've got a shared secret key (or else this
+        message wouldn't decrypt).
+
+        It is also used to exchange arbitrary information, intended
+        for applications to learn what the peer supports.
+        The `dict` may contain any JSON-able information.
+        """
+
+    def wormhole_got_message(plaintext: bytes) -> None:  # XXX bytes, or str?
+        """
+        We have received a message from the other side during normal
+        operations (i.e. after "versions" has been exchanged).
+
+        These are application-specific messages.
+        """
+
+    def wormhole_closed(result: str) -> None:
+        """
+        The wormhole session has been closed. The `result` string is one
+        of the following:
+
+        - `"empty"`: we didn't get very far
+        - `"unwelcome"`: XXX didn't get welcome? permissions failed?
+        - `"errory"`: something went wrong
+        - `"scary"`: key-confirmation failed
+        - `"lonely"`: our peer never showed up
+        - `"happy"`: everything worked as intended
+        """
+
+
 class IBoss(Interface):
     pass
 
@@ -179,21 +248,6 @@ class IDeferredWormhole(Interface):
         :rtype: ``Deferred[str]``
         """
 
-    def get_unverified_key():
-        """
-        Wait for key-exchange to occur, then return the raw unverified SPAKE2
-        key.  When this fires, we have not seen any evidence that anyone else
-        shares this key (nor have we seen evidence of a failed attack: e.g. a
-        payload encrypted with a different key).
-
-        This is only useful for testing, and for noticing a significant delay
-        between the key-agreement message and the subsequent key-verification
-        ("versions") message.
-
-        :return: the raw unverified SPAKE2 key
-        :rtype: ``Deferred[bytes]``
-        """
-
     def get_verifier():
         """
         Wait for key verification to occur, then return the verifier string.
@@ -248,7 +302,7 @@ class IDeferredWormhole(Interface):
 
         This must be called after the key has been established, so after any
         of
-        ``get_unverified_key()/get_verifier()/get_versions()/get_message()``
+        ``get_verifier()/get_versions()/get_message()``
         have fired.  ``derive_key()`` returns immediately, rather than
         returning a ``Deferred``.
 
